@@ -1,0 +1,161 @@
+[
+  {
+    "referenceName": "first_name",
+    "id": "8312DD86-3D34-4EAC-B934-45A4D0A5D40A",
+    "text": null,
+    "label": "First Name",
+    "required": true,
+    "field_name": "text_input_30A363CE-2C2A-4A6F-85BC-A027FDBF7F10",
+    "defaultValue": null,
+    "content": "",
+    "maxLength": null,
+    "minLength": null,
+    "element": "TextInput"
+  },
+  {
+    "referenceName": "last_name",
+    "id": "BAC1FD7D-1097-4360-9560-5A901BC9B4C7",
+    "text": null,
+    "label": "Last Name",
+    "required": true,
+    "field_name": "text_input_720E8936-6D88-47A7-BA70-F0F63B6BE15E",
+    "defaultValue": null,
+    "content": "",
+    "maxLength": null,
+    "minLength": null,
+    "element": "TextInput"
+  },
+  {
+    "referenceName": "role",
+    "id": "37AD9985-936B-475E-9958-36E05A043D6D",
+    "text": null,
+    "label": "Role",
+    "required": true,
+    "field_name": "dropdown_E5912350-E1E1-4450-BC41-C411EDD588C6",
+    "defaultValue": null,
+    "options": [
+      {
+        "text": "Crew Member",
+        "value": "Crew Member",
+        "key": "dropdown_option_FAB2D51E-68AD-4960-81BF-9C1D22D746F3",
+        "label": "Crew Member"
+      },
+      {
+        "text": "Cashier",
+        "value": "Cashier",
+        "key": "dropdown_option_A5280EFA-B8F3-49F8-8D30-9D2D1546C288",
+        "label": "Cashier"
+      },
+      {
+        "text": "Cook",
+        "value": "Cook",
+        "key": "dropdown_option_0F1CBBEA-331B-4335-B6E8-605048D483DF",
+        "label": "Cook"
+      },
+      {
+        "text": "Shift Manager",
+        "value": "Shift Manager",
+        "key": "dropdown_option_A8A22C1B-29D4-4BA7-94FC-D2566CE8D81B",
+        "label": "Shift Manager"
+      },
+      {
+        "text": "Store Manager",
+        "value": "Store Manager",
+        "key": "dropdown_option_698831AD-1DB2-4E62-AAE2-A414CA6CAA4B",
+        "label": "Store Manager"
+      }
+    ],
+    "element": "Dropdown"
+  },
+  {
+    "referenceName": "start_date",
+    "id": "2C3DCB9A-CD07-4D6B-8229-057592D294DB",
+    "text": null,
+    "label": "Start Date",
+    "required": true,
+    "field_name": "date_picker_212362DA-3A83-4E25-86F4-96776CE18A80",
+    "defaultValue": null,
+    "readOnly": false,
+    "defaultToday": false,
+    "dateFormat": "MM/dd/yyyy",
+    "timeFormat": "hh:mm aa",
+    "showTimeSelect": false,
+    "showTimeSelectOnly": false,
+    "showTimeZone": false,
+    "overwrite_value": false,
+    "element": "DatePicker"
+  },
+  {
+    "referenceName": "favorite_burger_type",
+    "id": "789B270B-B6D1-412D-88C7-D4FB6F058463",
+    "text": null,
+    "label": "Favorite Burger Type",
+    "required": true,
+    "field_name": "dropdown_B1AF5B89-1D4A-419A-B7B4-E27633E2275B",
+    "defaultValue": null,
+    "options": [
+      {
+        "text": "Big Mac",
+        "value": "Big Mac",
+        "key": "dropdown_option_F88A8FBE-5ABA-4B80-99AF-E4B0AB369740",
+        "label": "Big Mac"
+      },
+      {
+        "text": "Quarter Pounder",
+        "value": "Quarter Pounder",
+        "key": "dropdown_option_3C48CF22-F3AA-4F09-850D-4AC21D0CC384",
+        "label": "Quarter Pounder"
+      },
+      {
+        "text": "McChicken",
+        "value": "McChicken",
+        "key": "dropdown_option_4D33C6D0-B31C-48EB-8400-68213D126670",
+        "label": "McChicken"
+      },
+      {
+        "text": "Cheeseburger",
+        "value": "Cheeseburger",
+        "key": "dropdown_option_55B9524A-4618-4867-AB75-FBFAC30B931A",
+        "label": "Cheeseburger"
+      },
+      {
+        "text": "Veggie Burger",
+        "value": "Veggie Burger",
+        "key": "dropdown_option_BA5AD797-94B9-4C36-BFD2-85627240152D",
+        "label": "Veggie Burger"
+      }
+    ],
+    "element": "Dropdown"
+  },
+  {
+    "referenceName": "notes_preferences",
+    "id": "61F39E50-A62A-4E04-A556-A6CE288BE656",
+    "text": null,
+    "label": "Notes / preferences",
+    "required": false,
+    "field_name": "text_area_55D51ED7-B25E-4142-9962-CB578674402E",
+    "defaultValue": "",
+    "content": "",
+    "maxLength": null,
+    "minLength": null,
+    "element": "TextArea"
+  },
+  {
+    "referenceName": "confirm_onboarding_documents_received",
+    "id": "B5BBD7C9-393D-4202-BAB0-A41645A94B5C",
+    "text": null,
+    "label": "Onboarding Confirmation",
+    "required": true,
+    "field_name": "checkboxes_356AC150-3FB1-41A9-A6F1-68769D56FFFE",
+    "defaultValue": null,
+    "options": [
+      {
+        "text": "Confirm onboarding documents received",
+        "value": "confirm_onboarding_documents_received",
+        "key": "checkboxes_option_055D1C1F-4DF1-4FB9-A8EB-104EF4F3B762",
+        "label": "Confirm onboarding documents received"
+      }
+    ],
+    "element": "Checkboxes"
+  }
+]

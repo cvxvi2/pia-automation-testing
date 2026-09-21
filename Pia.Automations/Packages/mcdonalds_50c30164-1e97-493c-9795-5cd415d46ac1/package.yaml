@@ -1,0 +1,15 @@
+# Pia Automation Package
+conditions: 
+- name: 'client_filter' 
+  optMode: 'OptOut'
+  category: 'Hello World'
+
+- name: 'chat' 
+  option_button: 'The name of the button in Pia'
+  option_text: 'Text which is displayed in the Pia Chatbot'
+  option_category: 'Pia Chatbot Category'
+
+steps:
+- task: chat_interaction
+  inputs:
+    text: 'Hello World!'

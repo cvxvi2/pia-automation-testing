@@ -1,0 +1,288 @@
+# Orchestrator package
+conditions: 
+- name: 'client_filter' 
+  optMode: 'OptOut'
+  category: 'On-Boarding'
+  tags: 'OnBoarding,Cloud Hybrid=Prem Only'
+
+- name: 'schedule'
+  cron: '0 0 */23 * * *'
+
+steps:
+
+- task: get_machines
+  alias: 'get_agents'
+  inputs:
+    machine_info: 'true'
+
+- task: inline_powershell
+  alias: compile_agents
+  inputs:
+    pia: =get_agents.machines
+    script: |
+        [System.Collections.ArrayList]$Agents = @();
+        [System.Collections.ArrayList]$PiaAgents = @();
+        if(![string]::IsNullOrEmpty($pia)){
+            $PiaAgents.AddRange($(ConvertFrom-Json $pia))
+            $PiaAgents = $PiaAgents.Where({$_.Status -eq "Online" -and $_.IsActive -eq $true})
+            
+            $Agents.AddRange($PiaAgents.where({
+            ## Get domain controllers
+                $_.MachineInformation.MachineType -eq 'Domain Controller' -OR 
+            ## Get all other servers
+                $_.MachineInformation.MachineType -eq 'Server' -OR
+            ## Exclude Windows XP/Vista/7/8/10/11.
+                ($_.MachineInformation.MachineOperatingSystem -notlike "*Windows XP*" -and
+                $_.MachineInformation.MachineOperatingSystem -notlike "*Windows Vista*" -and
+                $_.MachineInformation.MachineOperatingSystem -notlike "*Windows 7*" -and
+                $_.MachineInformation.MachineOperatingSystem -notlike "*Windows 8*" -and
+                $_.MachineInformation.MachineOperatingSystem -notlike "*Windows 10*" -and
+                $_.MachineInformation.MachineOperatingSystem -notlike "*Windows 11*")
+            }));
+
+            #$Agents = $Agents | Sort-Object -Property QualifiedName -Unique
+        }
+        Write-Host "Agents: $($Agents.Count)"
+        if($Agents.Count -eq 0){
+            return @{stop=$true;}
+        }else{
+            Write-Host $($Agents.QualifiedName -join ';')
+        }
+        return @{agents = @($Agents)}
+
+- task: stop
+  inputs:
+    condition: =agents_formDef.stop
+
+## Loop through servers to get Roles.
+- task: inline_powershell
+  alias: 'loop_start'
+  inputs:
+    index: =loop_start.index
+    all_servers: =compile_agents.agents
+    script: |
+        if([string]::IsNullOrEmpty($index)){
+            [int]$index = 0
+        }
+        else{
+            [int]$index = $index
+            $index++
+        }
+        [Array]$Servers = @()
+        if(![string]::IsNullOrEmpty($all_servers)){
+            $Servers += $(ConvertFrom-Json $all_servers)
+        } else {
+            return @{
+                skip = $true;
+                loop = $false;
+            }
+        }
+        if($index -lt $Servers.Count){
+            $server = "$($Servers[$index].QualifiedName)".ToUpper()
+            return @{
+                index = [int]$index
+                server = "$server"
+                loop = $index -lt $Servers.Count-1
+            }
+        }
+        else{
+            return @{
+                skip = $true;
+                loop = $false;
+            }
+        }
+
+ 
+
+- task: onboarding_get_agent_information
+  skip: =loop_start.skip
+  executionEnvironment: 'System'
+  executionEnvironmentKey: =loop_start.server
+
+- task: inline_powershell
+  alias: 'compile_onboarding'
+  skip: =loop_start.skip
+  inputs:
+    server_data: =onboarding_get_agent_information.data
+    server_data_2: =compile_onboarding.data
+    server: =loop_start.server
+    script: |
+        Write-Host "Server: $server"
+        [Array]$data = @()
+        Write-Host $server_data
+        if(![string]::IsNullOrEmpty($server_data_2)){
+            $tempData2 = $(ConvertFrom-Json $server_data_2)
+            $data += $tempData2
+        }
+        if(![string]::IsNullOrEmpty($server_data)){
+            $tempData = $(ConvertFrom-Json $server_data)
+            $tempData | Add-Member -Name QualifiedName -Value $server -MemberType NoteProperty -Force
+            $data += $tempData
+        }
+        Write-Host $($data | ConvertTo-Json)
+        return @{
+            data = @($data);
+        }
+
+- task: loop
+  inputs:
+    condition: =loop_start.loop
+    activity: 'loop_start'
+
+- task: inline_powershell
+  alias: 'configData'
+  inputs:
+    server_data: =compile_onboarding.data
+    script: |
+        if (![string]::IsNullOrEmpty($server_data)) {
+            $tempData = $(ConvertFrom-Json $server_data)
+        }
+        [string]$Domain_Controller = ""
+        $skipTagDC = $true
+        [string]$ADSync_Server = ""
+        $skipTagAzureSync = $true
+        [string]$Exchange = ""
+        $skipTagExchange = $true
+        $dcObj = $tempData | Where-Object { $_.isPrimaryDomainController -eq $true }
+        if ($null -ne $dcObj) {
+            $Domain_Controller = $($dcObj).QualifiedName | Select -First 1
+            $skipTagDC = $false
+        }
+        else {
+            Write-Warning "ERROR: Unable to locate a Primary Domain Controller"
+        }
+        $adSyncObj = $tempData | Where {$_.isAzureSyncServer -eq $true}
+        if ($null -ne $adSyncObj) {
+            $ADSync_Server = $($adSyncObj).QualifiedName | Select -First 1
+            $skipTagAzureSync = $false
+        }
+        else {
+            Write-Warning "ERROR: Unable to locate an Azure Sync Server"
+        }
+        $exchangeObj = $tempData | Where {$_.isExchangeServer -eq $true}
+        if ($null -ne $exchangeObj) {
+            $Exchange = $($exchangeObj).QualifiedName | Select -First 1
+            $skipTagExchange = $false
+        }
+        else {
+            Write-Warning "ERROR: Unable to locate an Exchange Server"
+        }
+        
+        $formDef = @{}
+        $formDef += @{"primaryDC" = $($Domain_Controller).Trim();}
+        
+        if([string]::IsNullOrEmpty($ADSync_Server)){
+            Write-Host "Client is On Prem Only. No AD Sync server found."
+            $formDef += @{"modeOption" = "on_prem_only";}
+            $newuser = '57d2a08d-01a5-4a29-b020-fe03f6d8ee53'
+            $newuserForm = 'ad_user_details_vars'
+        
+        }else{
+            Write-Host "Client is Cloud Hybrid."
+            $formDef += @{"modeOption" = "cloud_hybrid";}
+            $formDef += @{"azureADConnectServer" = $($ADSync_Server).Trim();}
+            $newuser = '4ca9e220-238f-4268-8c50-637e49b718f0'
+            $newuserForm = 'hybrid_user_details_vars'
+        }
+        
+        if(![string]::IsNullOrEmpty($Exchange)){
+            Write-Host "Client has Exchange Server"
+            $formDef += @{"exchange_server" = $($Exchange).Trim();}
+        }
+        
+        Write-Host $(ConvertTo-Json $formDef)
+
+        return @{
+            global_formDef = $formDef;
+            #newUserPackageId = $newuser;
+            #newUserFormId = $newuserForm;
+            skipChatMsg = $(![string]::IsNullOrEmpty($Domain_Controller) -and
+                            ![string]::IsNullOrEmpty($ADSync_Server) -and
+                            ![string]::IsNullOrEmpty($Exchange))
+            stop = [string]::IsNullOrEmpty($Domain_Controller)
+            primaryDCServer = "$($Domain_Controller)".Trim();
+            skipTagDC = $skipTagDC
+            azureSyncServer = "$($ADSync_Server)".Trim();
+            skipTagAzureSync = $skipTagAzureSync
+            exchangeServer = "$($Exchange)".Trim();
+            skipTagExchange = $skipTagExchange
+        }
+
+- task: inline_powershell
+  skip: '{=configData.skipChatMsg}'
+  inputs:
+    script: |
+        Write-Host "The primary domain controller was not found, exiting package."
+
+- task: stop
+  inputs:
+    condition: =configData.stop
+
+- task: pia_set_tag
+  skip: =configData.skipTagDC
+  inputs:
+    id: =configData.primaryDCServer
+    type: 'agent'
+    tag: 'Primary Domain Controller'
+    action: 'add'
+
+- task: pia_set_tag
+  skip: =configData.skipTagAzureSync
+  inputs:
+    id: =configData.azureSyncServer
+    type: 'agent'
+    tag: 'Azure Sync'
+    action: 'add'
+
+- task: pia_set_tag
+  skip: =configData.skipTagExchange
+  inputs:
+    id: =configData.exchangeServer
+    type: 'agent'
+    tag: 'Exchange Server'
+    action: 'add'
+
+- task: set_config_form_data
+  alias: 'globalConfigform'
+  inputs:
+    global: 'true'
+    form_def: =configData.global_formDef
+    action: 'add'
+
+- task: pia_set_tag
+  inputs:
+    type: 'client'
+    tag: 'OnBoarding'
+    action: 'remove'
+
+
+## Following code is for setting the username format on the New User form.
+## Currently there is a bug with this implementation and how it is trying to enter data into a 'Tags' form field that has values.
+
+#- task: onboarding_get_username_formats
+#  executionEnvironment: 'System'
+#  executionEnvironmentKey: =configData.primaryDC
+#
+#- task: inline_powershell
+#  alias: 'configData_NewUser'
+#  inputs:
+#    username_data: =onboarding_get_username_formats.data
+#    script: |
+#        $tempData = $(ConvertFrom-Json $username_data)
+#        $formDef = @{}
+#        $formDef += @{"username_format" = $($tempData.username_format)}
+#        $formDef += @{"upn_format" = $($tempData.upn_format)}
+#
+#        return @{
+#            formDef = $formDef;
+#        }
+#
+#
+#- task: set_config_form_data
+#  alias: 'newUserform'
+#  inputs:
+#    global: 'false'
+#    package_id: =configData.newUserPackageId
+#    form_name: =configData.newUserFormId
+#    form_def: =configData_NewUser.formDef
+#    action: 'add'
