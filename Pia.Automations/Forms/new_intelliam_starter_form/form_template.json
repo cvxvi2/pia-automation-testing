@@ -1,0 +1,206 @@
+[
+  {
+    "referenceName": "first_name",
+    "id": "F4B11D42-95F5-4E52-9239-1AEAB3D57B0A",
+    "text": null,
+    "label": "First Name",
+    "required": true,
+    "field_name": "text_input_1A4AC153-D5B8-4200-B9E9-FD2B6291EF4E",
+    "defaultValue": null,
+    "content": "",
+    "maxLength": null,
+    "minLength": null,
+    "element": "TextInput"
+  },
+  {
+    "referenceName": "middle_name",
+    "id": "69F7A263-8772-4A3C-8C3A-BD9D8DDF47E5",
+    "text": null,
+    "label": "Middle Name",
+    "required": false,
+    "field_name": "text_input_4C3984E0-3DB2-4C44-A842-D957F60E1829",
+    "defaultValue": null,
+    "content": "",
+    "maxLength": null,
+    "minLength": null,
+    "element": "TextInput"
+  },
+  {
+    "referenceName": "last_name",
+    "id": "D027B7FD-096D-475A-9A1C-2832D8D7C8DE",
+    "text": null,
+    "label": "Last Name",
+    "required": true,
+    "field_name": "text_input_5335B62D-E513-44E3-BC65-DB66354A602C",
+    "defaultValue": null,
+    "content": "",
+    "maxLength": null,
+    "minLength": null,
+    "element": "TextInput"
+  },
+  {
+    "referenceName": "email_address",
+    "id": "94236CA8-30B9-4C75-BB6A-8A2B1D0947C7",
+    "text": null,
+    "label": "Email Address",
+    "required": true,
+    "field_name": "text_input_45F4C80A-B45D-42CC-B5ED-3EAB28D7A34D",
+    "defaultValue": null,
+    "content": "",
+    "maxLength": null,
+    "minLength": null,
+    "element": "TextInput"
+  },
+  {
+    "referenceName": "license",
+    "id": "FFA900CD-8AE2-4638-B6F5-BB3AA2A9A3AE",
+    "text": null,
+    "label": "License",
+    "required": true,
+    "field_name": "dropdown_7DDDCBFE-5FF2-4685-BE3A-E91E0EE7AAA7",
+    "defaultValue": null,
+    "options": [
+      {
+        "text": "Microsoft 365 Business Basic",
+        "value": "M365_Business_Basic",
+        "key": "dropdown_option_4C2D3F8F-EA34-4F0E-A6C2-C4E092D4D0D7",
+        "label": "Microsoft 365 Business Basic"
+      },
+      {
+        "text": "Microsoft 365 Business Standard",
+        "value": "M365_Business_Standard",
+        "key": "dropdown_option_31F6416F-84A1-4DA2-978A-3D8D9AA971B0",
+        "label": "Microsoft 365 Business Standard"
+      },
+      {
+        "text": "None",
+        "value": "None",
+        "key": "dropdown_option_E3F07ECD-0E46-4C88-9A2C-632FAF2DA6DD",
+        "label": "None"
+      }
+    ],
+    "element": "Dropdown"
+  },
+  {
+    "referenceName": "machine_type",
+    "id": "0D39D0A6-2E39-4AD2-95B2-D7FAD7F19928",
+    "text": null,
+    "label": "Machine Type",
+    "required": true,
+    "field_name": "dropdown_3FD5D76A-78E1-4E77-B081-E74C3F84BC4C",
+    "defaultValue": null,
+    "options": [
+      {
+        "text": "New Machine",
+        "value": "New Machine",
+        "key": "dropdown_option_6A9D8091-0999-40F3-B3FC-7CC350B3D4E3",
+        "label": "New Machine"
+      },
+      {
+        "text": "Existing Machine",
+        "value": "Existing Machine",
+        "key": "dropdown_option_32B0CC14-EF8B-4B66-850E-48C7E65D1894",
+        "label": "Existing Machine"
+      }
+    ],
+    "element": "Dropdown"
+  },
+  {
+    "referenceName": "exclaimer_signature",
+    "id": "7E70BD6E-E944-4F22-AF56-720CFD081D3D",
+    "text": null,
+    "label": "Exclaimer Signature",
+    "required": true,
+    "field_name": "dropdown_40F20C4B-7F6B-4AA8-9818-909C7A70AEE9",
+    "defaultValue": null,
+    "options": [
+      {
+        "text": "Default",
+        "value": "Default",
+        "key": "dropdown_option_D39CA4AD-CB4F-4B8B-B000-EF2A7B8AEBC2",
+        "label": "Default"
+      },
+      {
+        "text": "None",
+        "value": "None",
+        "key": "dropdown_option_11657A96-2D0E-4BA0-A0A3-A80D93935D08",
+        "label": "None"
+      }
+    ],
+    "element": "Dropdown"
+  },
+  {
+    "referenceName": "department_groups",
+    "id": "A8FAF680-5797-4E38-ABCC-77D98864DF67",
+    "text": null,
+    "label": "Any Department Groups",
+    "required": false,
+    "field_name": "text_input_574FF60E-3856-4CC8-BFAC-76A0E30C8E56",
+    "defaultValue": null,
+    "content": "",
+    "maxLength": null,
+    "minLength": null,
+    "element": "TextInput"
+  },
+  {
+    "referenceName": "company_distribution_list",
+    "id": "3D91CCCD-E3A2-407F-9D1D-F20C2D3C58F5",
+    "text": null,
+    "label": "Company Distribution List",
+    "required": true,
+    "field_name": "dropdown_07C4BB8C-3237-4E93-8F4F-EA929FCFF125",
+    "defaultValue": null,
+    "options": [
+      {
+        "text": "Yes",
+        "value": "Yes",
+        "key": "dropdown_option_6132DB17-BB3F-44D9-A7AE-D1F042C49AE1",
+        "label": "Yes"
+      },
+      {
+        "text": "No",
+        "value": "No",
+        "key": "dropdown_option_690D3C34-8807-4859-8C6C-2C7DAD8D5E32",
+        "label": "No"
+      }
+    ],
+    "element": "Dropdown"
+  },
+  {
+    "referenceName": "office_location",
+    "id": "2A0C5E28-2D5C-464C-8661-B0D4E3D318D3",
+    "text": null,
+    "label": "Office / User Location",
+    "required": true,
+    "field_name": "text_input_40A55B10-E777-4364-8D0E-4C3D6A8B3E50",
+    "defaultValue": null,
+    "content": "",
+    "maxLength": null,
+    "minLength": null,
+    "element": "TextInput"
+  },
+  {
+    "referenceName": "add_to_teams_group",
+    "id": "70A0E800-2382-44B7-8D68-4655051B31D6",
+    "text": null,
+    "label": "Add to Intelliam PLC Teams Group?",
+    "required": true,
+    "field_name": "dropdown_1B560C4D-89C6-4982-A080-7E10E3E54F0F",
+    "defaultValue": null,
+    "options": [
+      {
+        "text": "Yes",
+        "value": "Yes",
+        "key": "dropdown_option_7A05B2D9-6E7C-48ED-AEC2-EAD6B8B3A97D",
+        "label": "Yes"
+      },
+      {
+        "text": "No",
+        "value": "No",
+        "key": "dropdown_option_33C1DF56-7DAD-4A38-9EB2-6A44FFA045D8",
+        "label": "No"
+      }
+    ],
+    "element": "Dropdown"
+  }
+]

@@ -1,0 +1,115 @@
+# ============================================================
+# PIA - NEW INTELLIAM STARTER
+# ============================================================
+#
+# Purpose
+# -------
+# Smart form for creating a new IntelliAM starter request.
+#
+# The form captures:
+#   - first name / middle name / last name
+#   - email address
+#   - Microsoft 365 licence selection
+#   - machine selection
+#   - Exclaimer signature preference
+#   - department groups
+#   - company distribution list selection
+#   - office / user location
+#   - Intelliam PLC Teams group selection
+#
+# IMPORTANT
+# ---------
+# This package is intentionally clean and does not reuse the
+# deprecated IntelliAM starter package already in the repo.
+#
+# Any actual provisioning work should be handled in a separate
+# task package that uses the submitted form values and Microsoft
+# Graph / Exchange / Entra APIs.
+# ============================================================
+conditions:
+  - name: 'client_filter'
+    optMode: 'OptOut'
+    category: 'Staff Changes'
+
+  - name: 'smartform'
+    portal_form_title: 'New IntelliAM Starter'
+    portal_form_description: 'Request a new starter, Microsoft 365 access, device allocation and team group membership.'
+    portal_form_icon: 'fa-user-plus'
+
+steps:
+  - task: inline_powershell
+    alias: 'build_form_options'
+    inputs:
+      graph_token: $MSGRAPH_Api_Token_Client
+      tenant_id: $Ctx_Client_MSTenant_Id
+
+      script: |
+        write-host "Begin form creation options..."
+        $LicenseOptions = @(
+            @{
+                text = 'Microsoft 365 Business Basic'
+                value = 'M365_Business_Basic'
+                selected = $false
+            }
+            @{
+                text = 'Microsoft 365 Business Standard'
+                value = 'M365_Business_Standard'
+                selected = $false
+            }
+            @{
+                text = 'None'
+                value = 'None'
+                selected = $true
+            }
+        )
+
+        $MachineOptions = @(
+            @{
+                text = 'New Machine'
+                value = 'New Machine'
+                selected = $false
+            }
+            @{
+                text = 'Existing Machine'
+                value = 'Existing Machine'
+                selected = $false
+            }
+        )
+
+        $ExclaimerOptions = @(
+            @{
+                text = 'Default'
+                value = 'Default'
+                selected = $false
+            }
+            @{
+                text = 'None'
+                value = 'None'
+                selected = $true
+            }
+        )
+
+        $YesNoOptions = @(
+            @{
+                text = 'Yes'
+                value = 'Yes'
+                selected = $false
+            }
+            @{
+                text = 'No'
+                value = 'No'
+                selected = $false
+            }
+        )
+
+        $FormDef = @{
+            license = @($LicenseOptions)
+            machine_type = @($MachineOptions)
+            exclaimer_signature = @($ExclaimerOptions)
+            company_distribution_list = @($YesNoOptions)
+            add_to_teams_group = @($YesNoOptions)
+        }
+        write-host "END form creation options..."
+        return @{
+            FormDef = $FormDef
+        }

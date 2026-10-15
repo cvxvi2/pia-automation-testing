@@ -1,0 +1,44 @@
+[
+  {
+    "referenceName": "favorite_burger",
+    "id": "F4A7C1D9-2E3B-4D9F-A7C8-1B2C3D4E5F6A",
+    "text": null,
+    "label": "What is your favourite Burger King burger?",
+    "required": true,
+    "field_name": "dropdown_F4A7C1D9-2E3B-4D9F-A7C8-1B2C3D4E5F6A",
+    "defaultValue": null,
+    "options": [
+      {
+        "text": "Whopper",
+        "value": "Whopper",
+        "key": "dropdown_option_01A2B3C4-D5E6-47F8-9ABC-1234567890AB",
+        "label": "Whopper"
+      },
+      {
+        "text": "Whopper Jr.",
+        "value": "Whopper Jr.",
+        "key": "dropdown_option_02B3C4D5-E6F7-48F9-ABCD-2345678901BC",
+        "label": "Whopper Jr."
+      },
+      {
+        "text": "Bacon King",
+        "value": "Bacon King",
+        "key": "dropdown_option_03C4D5E6-F7A8-49FA-BCDE-3456789012CD",
+        "label": "Bacon King"
+      },
+      {
+        "text": "Impossible Whopper",
+        "value": "Impossible Whopper",
+        "key": "dropdown_option_04D5E6F7-A8B9-4AFB-CDEF-4567890123DE",
+        "label": "Impossible Whopper"
+      },
+      {
+        "text": "Chicken Sandwich",
+        "value": "Chicken Sandwich",
+        "key": "dropdown_option_05E6F7A8-B9CA-4BFC-DEF0-5678901234EF",
+        "label": "Chicken Sandwich"
+      }
+    ],
+    "element": "Dropdown"
+  }
+]

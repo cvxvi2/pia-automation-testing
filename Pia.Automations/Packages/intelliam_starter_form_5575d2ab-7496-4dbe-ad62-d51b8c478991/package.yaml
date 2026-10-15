@@ -1,0 +1,578 @@
+# ============================================================
+# PIA - NEW STARTER ONBOARDING SMARTFORM
+# ============================================================
+#
+# PURPOSE
+# -------
+# Dynamically build a SmartForm for new starter onboarding.
+#
+# The form collects:
+#   - First name
+#   - Surname
+#   - Email address
+#   - New / Existing machine
+#   - Office
+#   - Exclaimer groups
+#   - Department / access groups
+#   - Shared mailboxes
+#   - Distribution lists
+#   - Teams requirement
+#   - Teams groups
+#   - Microsoft 365 licence
+#
+#
+# IMPORTANT
+# ---------
+# NO CLIENT SECRET / API KEY IS STORED IN THIS PACKAGE.
+#
+# Pia provides the configured Microsoft Graph token through:
+#
+#     $MSGRAPH_Api_Token_Client
+#
+# and the Microsoft tenant ID through:
+#
+#     $Ctx_Client_MSTenant_Id
+#
+# These are configured in Pia's client/integration settings.
+#
+# ============================================================
+conditions:
+
+  # ----------------------------------------------------------
+  # SmartForm availability
+  # ----------------------------------------------------------
+  - name: 'client_filter'
+    optMode: 'OptOut'
+    category: 'Staff Changes'
+
+  # ----------------------------------------------------------
+  # SmartForm presentation
+  # ----------------------------------------------------------
+  - name: 'smartform'
+    portal_form_title: 'New Starter Onboarding'
+    portal_form_description: 'Complete this form to request a new starter account, equipment and Microsoft 365 access.'
+    portal_form_icon: 'fa-user-plus'
+
+
+steps:
+
+
+  # ==========================================================
+  # STEP 1
+  # GET MICROSOFT GRAPH TOKEN
+  # ==========================================================
+  #
+  # No secret goes here.
+  #
+  # $MSGRAPH_Api_Token_Client is supplied by Pia when the
+  # client's Microsoft Graph integration is configured.
+  #
+  # ==========================================================
+
+  - task: inline_powershell
+    alias: 'build_form_options'
+    inputs:
+
+      graph_token: $MSGRAPH_Api_Token_Client
+      tenant_id: $Ctx_Client_MSTenant_Id
+
+      script: |
+
+        # ====================================================
+        # CONFIGURATION
+        # ====================================================
+
+        #
+        # These are the ONLY parts you should initially need
+        # to customise for your environment.
+        #
+        # Replace the example GUIDs with the REAL Entra group
+        # IDs used by your organisation.
+        #
+
+
+        # ----------------------------------------------------
+        # EXCLAIMER GROUP IDS
+        # ----------------------------------------------------
+        #
+        # Microsoft Graph cannot inherently know:
+        #
+        #     "This group is used by Exclaimer"
+        #
+        # So we explicitly classify the groups which should
+        # appear in the Exclaimer selector.
+        #
+
+        $ExclaimerGroupIds = @(
+            "00000000-0000-0000-0000-000000000001",
+            "00000000-0000-0000-0000-000000000002"
+        )
+
+
+        # ----------------------------------------------------
+        # DEPARTMENT / ACCESS GROUP IDS
+        # ----------------------------------------------------
+        #
+        # These can be security groups or other groups you
+        # want engineers/users to select during onboarding.
+        #
+
+        $DepartmentGroupIds = @(
+            "00000000-0000-0000-0000-000000000003",
+            "00000000-0000-0000-0000-000000000004",
+            "00000000-0000-0000-0000-000000000005"
+        )
+
+
+        # ----------------------------------------------------
+        # GROUPS TO HIDE
+        # ----------------------------------------------------
+        #
+        # Useful for excluding technical/system groups.
+        #
+
+        $HiddenGroupIds = @(
+            "00000000-0000-0000-0000-000000000099"
+        )
+
+
+        # ----------------------------------------------------
+        # OFFICES
+        # ----------------------------------------------------
+        #
+        # Keep this manually configured initially.
+        #
+        # These can later come from another source if desired.
+        #
+
+        $OfficeOptions = @(
+            @{
+                text     = "London"
+                value    = "London"
+                selected = $false
+            }
+
+            @{
+                text     = "Manchester"
+                value    = "Manchester"
+                selected = $false
+            }
+
+            @{
+                text     = "Bristol"
+                value    = "Bristol"
+                selected = $false
+            }
+
+            @{
+                text     = "Remote"
+                value    = "Remote"
+                selected = $false
+            }
+        )
+
+
+        # ----------------------------------------------------
+        # MACHINE OPTIONS
+        # ----------------------------------------------------
+
+        $MachineOptions = @(
+            @{
+                text     = "New machine"
+                value    = "new"
+                selected = $false
+            }
+
+            @{
+                text     = "Existing machine"
+                value    = "existing"
+                selected = $false
+            }
+        )
+
+
+        # ----------------------------------------------------
+        # TEAMS REQUIRED
+        # ----------------------------------------------------
+
+        $TeamsRequiredOptions = @(
+            @{
+                text     = "Yes"
+                value    = "yes"
+                selected = $false
+            }
+
+            @{
+                text     = "No"
+                value    = "no"
+                selected = $false
+            }
+        )
+
+
+        # ====================================================
+        # GRAPH CONNECTION
+        # ====================================================
+
+        $GraphBaseUrl = "https://graph.microsoft.com/v1.0"
+
+        $GraphHeaders = @{
+            Authorization = "Bearer $graph_token"
+            "Content-Type" = "application/json"
+        }
+
+
+        # ====================================================
+        # FUNCTION:
+        # GET ALL GRAPH PAGES
+        # ====================================================
+
+        function Get-GraphPaged {
+
+            param(
+                [Parameter(Mandatory = $true)]
+                [string]$Uri
+            )
+
+            $Results = @()
+
+            while ($Uri) {
+
+                try {
+
+                    $Response = Invoke-RestMethod `
+                        -Method GET `
+                        -Uri $Uri `
+                        -Headers $GraphHeaders
+
+                }
+                catch {
+
+                    throw "Microsoft Graph request failed: $($_.Exception.Message)"
+                }
+
+
+                if ($null -ne $Response.value) {
+
+                    $Results += $Response.value
+                }
+
+
+                $Uri = $Response.'@odata.nextLink'
+            }
+
+            return $Results
+        }
+
+
+        # ====================================================
+        # GET ALL GROUPS
+        # ====================================================
+        #
+        # Graph gives us useful properties including:
+        #
+        # id
+        # displayName
+        # mail
+        # mailEnabled
+        # securityEnabled
+        # groupTypes
+        # resourceProvisioningOptions
+        #
+        # ====================================================
+
+        $GroupSelect = @(
+            "id"
+            "displayName"
+            "mail"
+            "mailEnabled"
+            "securityEnabled"
+            "groupTypes"
+            "resourceProvisioningOptions"
+        ) -join ","
+
+        $GroupsUri = "$GraphBaseUrl/groups?`$select=$GroupSelect&`$top=999"
+
+        $Groups = @(Get-GraphPaged -Uri $GroupsUri)
+
+
+        # ====================================================
+        # EXCLAIMER GROUPS
+        # ====================================================
+        #
+        # Selected purely by explicit Group ID classification.
+        #
+        # The display name comes directly from Microsoft 365,
+        # so renaming a group does not break the SmartForm.
+        #
+        # ====================================================
+
+        $ExclaimerOptions = @(
+            $Groups |
+                Where-Object {
+                    $ExclaimerGroupIds -contains $_.id
+                } |
+                Sort-Object displayName |
+                ForEach-Object {
+
+                    [PSCustomObject]@{
+                        text     = $_.displayName
+                        value    = $_.id
+                        selected = $false
+                    }
+                }
+        )
+
+
+        # ====================================================
+        # DEPARTMENT GROUPS
+        # ====================================================
+        #
+        # Again, based on Group ID rather than group name.
+        #
+        # ====================================================
+
+        $DepartmentOptions = @(
+            $Groups |
+                Where-Object {
+                    $DepartmentGroupIds -contains $_.id
+                } |
+                Sort-Object displayName |
+                ForEach-Object {
+
+                    [PSCustomObject]@{
+                        text     = $_.displayName
+                        value    = $_.id
+                        selected = $false
+                    }
+                }
+        )
+
+
+        # ====================================================
+        # TEAMS GROUPS
+        # ====================================================
+        #
+        # We do NOT need a naming prefix.
+        #
+        # Teams-backed Microsoft 365 groups expose
+        # "Team" in resourceProvisioningOptions.
+        #
+        # ====================================================
+
+        $TeamsOptions = @(
+            $Groups |
+                Where-Object {
+
+                    $_.resourceProvisioningOptions -contains "Team" -and
+                    !($HiddenGroupIds -contains $_.id)
+
+                } |
+                Sort-Object displayName |
+                ForEach-Object {
+
+                    [PSCustomObject]@{
+                        text     = $_.displayName
+                        value    = $_.id
+                        selected = $false
+                    }
+                }
+        )
+
+
+        # ====================================================
+        # DISTRIBUTION LISTS
+        # ====================================================
+        #
+        # Normal distribution groups are represented as:
+        #
+        # mailEnabled  = true
+        # securityEnabled = false
+        # and are not Unified Microsoft 365 groups.
+        #
+        # ====================================================
+
+        $DistributionListOptions = @(
+            $Groups |
+                Where-Object {
+
+                    $_.mailEnabled -eq $true -and
+                    $_.securityEnabled -eq $false -and
+                    !($_.groupTypes -contains "Unified") -and
+                    !($HiddenGroupIds -contains $_.id)
+
+                } |
+                Sort-Object displayName |
+                ForEach-Object {
+
+                    [PSCustomObject]@{
+                        text     = if ($_.mail) {
+                            "$($_.displayName) - $($_.mail)"
+                        }
+                        else {
+                            $_.displayName
+                        }
+
+                        value    = $_.id
+                        selected = $false
+                    }
+                }
+        )
+
+
+        # ====================================================
+        # MICROSOFT 365 LICENCES
+        # ====================================================
+        #
+        # Query the tenant's subscribed SKUs.
+        #
+        # skuId becomes the value stored by the form.
+        #
+        # ====================================================
+
+        $SkuUri = "$GraphBaseUrl/subscribedSkus?`$select=skuId,skuPartNumber,capabilityStatus,prepaidUnits,consumedUnits"
+
+        try {
+
+            $SkuResponse = Invoke-RestMethod `
+                -Method GET `
+                -Uri $SkuUri `
+                -Headers $GraphHeaders
+
+            $SubscribedSkus = @($SkuResponse.value)
+        }
+        catch {
+
+            throw "Unable to retrieve Microsoft 365 licences: $($_.Exception.Message)"
+        }
+
+
+        # ----------------------------------------------------
+        # Friendly SKU names
+        #
+        # Microsoft's skuPartNumber is often not pleasant for
+        # humans, so translate commonly-used values.
+        #
+        # Add your own values here.
+        # ----------------------------------------------------
+
+        $LicenseNames = @{
+
+            "SPB" = "Microsoft 365 Business Premium"
+
+            "SPE_E3" = "Microsoft 365 E3"
+
+            "SPE_E5" = "Microsoft 365 E5"
+
+            "ENTERPRISEPACK" = "Office 365 E3"
+
+            "ENTERPRISEPREMIUM" = "Office 365 E5"
+
+            "O365_BUSINESS_PREMIUM" = "Microsoft 365 Business Standard"
+
+            "O365_BUSINESS" = "Microsoft 365 Apps for Business"
+
+            "M365_F1" = "Microsoft 365 F1"
+
+            "M365_F3" = "Microsoft 365 F3"
+        }
+
+
+        $LicenseOptions = @(
+            $SubscribedSkus |
+                Where-Object {
+                    $_.capabilityStatus -eq "Enabled"
+                } |
+                Sort-Object skuPartNumber |
+                ForEach-Object {
+
+                    $FriendlyName = $_.skuPartNumber
+
+                    if ($LicenseNames.ContainsKey($_.skuPartNumber)) {
+
+                        $FriendlyName = $LicenseNames[$_.skuPartNumber]
+                    }
+
+                    [PSCustomObject]@{
+                        text     = $FriendlyName
+                        value    = $_.skuId
+                        selected = $false
+                    }
+                }
+        )
+
+
+        # ====================================================
+        # SHARED MAILBOX PLACEHOLDER
+        # ====================================================
+        #
+        # Shared mailboxes are Exchange objects rather than
+        # Microsoft Entra groups.
+        #
+        # Leave this empty until the Exchange Online lookup is
+        # wired into the package using the client's configured
+        # Exchange Online connection.
+        #
+        # ====================================================
+
+        $SharedMailboxOptions = @()
+
+
+        # ====================================================
+        # BUILD PIA FORM DEFINITION
+        # ====================================================
+        #
+        # IMPORTANT:
+        #
+        # These property names MUST match the corresponding
+        # reference names in the Pia Form Editor.
+        #
+        # ====================================================
+
+        $FormDef = @{
+
+            exclaimer_groups = @(
+                $ExclaimerOptions
+            )
+
+            department_groups = @(
+                $DepartmentOptions
+            )
+
+            shared_mailboxes = @(
+                $SharedMailboxOptions
+            )
+
+            distribution_lists = @(
+                $DistributionListOptions
+            )
+
+            teams_groups = @(
+                $TeamsOptions
+            )
+
+            license = @(
+                $LicenseOptions
+            )
+
+            office = @(
+                $OfficeOptions
+            )
+
+            machine_type = @(
+                $MachineOptions
+            )
+
+            requires_teams = @(
+                $TeamsRequiredOptions
+            )
+        }
+
+
+        # ====================================================
+        # RETURN FORM DEFINITION
+        # ====================================================
+
+        return @{
+            FormDef = $FormDef
+        }
